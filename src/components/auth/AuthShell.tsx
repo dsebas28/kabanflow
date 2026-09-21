@@ -5,6 +5,7 @@ import AuthVisual from "@/components/AuthVisual";
 import ThemeToggle from "@/components/ThemeToggle";
 import WordReveal from "@/components/WordReveal";
 import PresenceDots from "@/components/auth/PresenceDots";
+import ActivityFeed from "@/components/auth/ActivityFeed";
 
 /** Split layout shared by login and register: scene on the left, form on the right. */
 export default function AuthShell({
@@ -36,6 +37,9 @@ export default function AuthShell({
             />
             <div className="mt-6">
               <PresenceDots />
+            </div>
+            <div className="mt-10 hidden [@media(min-height:780px)]:block">
+              <ActivityFeed />
             </div>
           </div>
         </div>

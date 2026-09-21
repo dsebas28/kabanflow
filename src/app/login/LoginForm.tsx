@@ -11,6 +11,18 @@ import FloatingField from "@/components/auth/FloatingField";
 import { fadeUp, stagger } from "@/lib/motion";
 
 const DEMO_CREDENTIALS = { email: "demo@kanbanflow.app", password: "demo1234" };
+const REMEMBER_KEY = "kanbanflow-remember-email";
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateEmail(value: string) {
+  if (!value.trim()) return "Escribe tu correo.";
+  if (!EMAIL_RE.test(value.trim())) return "Ese correo no parece válido. Revisa que tenga @ y un dominio.";
+  return "";
+}
+
+function validatePassword(value: string) {
+  return value ? "" : "Escribe tu contraseña.";
+}
 
 export default function LoginForm() {
   const router = useRouter();
@@ -21,6 +33,9 @@ export default function LoginForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [remember, setRemember] = useState(false);
+  const [capsOn, setCapsOn] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -28,11 +43,24 @@ export default function LoginForm() {
   const from = searchParams.get("from");
   const isDemo = searchParams.get("demo") === "1";
 
-  const doSubmit = async (submitEmail: string, submitPassword: string) => {
+  useEffect(() => {
+    // localStorage only exists in the browser, so the saved email can't be
+    // part of the server-rendered initial state without a hydration mismatch.
+    const saved = localStorage.getItem(REMEMBER_KEY);
+    if (saved) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEmail(saved);
+      setRemember(true);
+    }
+  }, []);
+
+  const shake = () => shakeControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
+
+  const doSubmit = async (submitEmail: string, submitPassword: string, rememberEmail = remember) => {
     setError("");
     setLoading(true);
     const result = await signIn("credentials", {
-      email: submitEmail,
+      email: submitEmail.trim(),
       password: submitPassword,
       redirect: false,
     });
@@ -41,9 +69,12 @@ export default function LoginForm() {
     if (!result || result.error) {
       setError("El correo o la contraseña no coinciden. Revisa los datos e inténtalo de nuevo.");
       toast.error("No se pudo iniciar sesión");
-      shakeControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
+      shake();
       return;
     }
+
+    if (rememberEmail) localStorage.setItem(REMEMBER_KEY, submitEmail.trim());
+    else localStorage.removeItem(REMEMBER_KEY);
 
     setSuccess(true);
     toast.success("¡Bienvenido de vuelta!");
@@ -55,15 +86,23 @@ export default function LoginForm() {
       submittedDemoRef.current = true;
       setEmail(DEMO_CREDENTIALS.email);
       setPassword(DEMO_CREDENTIALS.password);
-      doSubmit(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password);
+      doSubmit(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDemo]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const errors = { email: validateEmail(email), password: validatePassword(password) };
+    setFieldErrors(errors);
+    if (errors.email || errors.password) {
+      shake();
+      return;
+    }
     doSubmit(email, password);
   };
+
+  const trackCapsLock = (e: React.KeyboardEvent<HTMLInputElement>) => setCapsOn(e.getModifierState("CapsLock"));
 
   return (
     <motion.div animate={shakeControls}>
@@ -82,9 +121,23 @@ export default function LoginForm() {
         )}
       </AnimatePresence>
 
-      <motion.form onSubmit={handleSubmit} initial="hidden" animate="show" variants={stagger(0.09, 0.45)} className="space-y-4">
+      <motion.form onSubmit={handleSubmit} noValidate initial="hidden" animate="show" variants={stagger(0.09, 0.45)} className="space-y-4">
         <motion.div variants={fadeUp}>
-          <FloatingField id="email" type="email" label="Correo" required autoComplete="email" value={email} onChange={setEmail} />
+          <FloatingField
+            id="email"
+            type="email"
+            label="Correo"
+            autoComplete="email"
+            autoFocus
+            value={email}
+            error={fieldErrors.email}
+            onChange={(v) => {
+              setEmail(v);
+              if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: validateEmail(v) }));
+              if (error) setError("");
+            }}
+            onBlur={() => email && setFieldErrors((f) => ({ ...f, email: validateEmail(email) }))}
+          />
         </motion.div>
 
         <motion.div variants={fadeUp}>
@@ -92,10 +145,17 @@ export default function LoginForm() {
             id="password"
             type={showPassword ? "text" : "password"}
             label="Contraseña"
-            required
             autoComplete="current-password"
             value={password}
-            onChange={setPassword}
+            error={fieldErrors.password}
+            hint={capsOn ? "Bloq Mayús está activado." : undefined}
+            onChange={(v) => {
+              setPassword(v);
+              if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: validatePassword(v) }));
+              if (error) setError("");
+            }}
+            onKeyDown={trackCapsLock}
+            onKeyUp={trackCapsLock}
             trailing={
               <button
                 type="button"
@@ -108,6 +168,17 @@ export default function LoginForm() {
             }
           />
         </motion.div>
+
+        <motion.label variants={fadeUp} htmlFor="remember" className="flex cursor-pointer select-none items-center gap-2.5 text-sm text-ink-dim">
+          <input
+            id="remember"
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-border accent-brand-600"
+          />
+          Recordar mi correo en este equipo
+        </motion.label>
 
         <motion.div variants={fadeUp}>
           <motion.button
@@ -136,8 +207,24 @@ export default function LoginForm() {
           </motion.button>
         </motion.div>
 
+        <motion.div variants={fadeUp} className="flex items-center gap-3 text-xs text-ink-faint">
+          <span className="h-px flex-1 bg-border" />
+          o
+          <span className="h-px flex-1 bg-border" />
+        </motion.div>
+
         <motion.div variants={fadeUp}>
-          <button type="button" onClick={() => doSubmit(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password)} className="btn-secondary w-full">
+          <button
+            type="button"
+            disabled={loading || success}
+            onClick={() => {
+              setEmail(DEMO_CREDENTIALS.email);
+              setPassword(DEMO_CREDENTIALS.password);
+              setFieldErrors({ email: "", password: "" });
+              doSubmit(DEMO_CREDENTIALS.email, DEMO_CREDENTIALS.password, false);
+            }}
+            className="btn-secondary w-full"
+          >
             Entrar con la cuenta demo
           </button>
         </motion.div>
