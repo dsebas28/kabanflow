@@ -4,7 +4,10 @@ export type BoardSummary = {
   description: string | null;
   color: string;
   updatedAt: string;
-  owner: { id: string; name: string };
+  owner: { id: string; name: string; avatarColor: string };
+  members: { id: string; user: { id: string; name: string; avatarColor: string } }[];
+  cardCount: number;
+  doneCount: number;
   _count: { lists: number; members: number };
 };
 

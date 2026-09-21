@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { AlertCircle, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import FloatingField from "@/components/auth/FloatingField";
+import RouteWipe, { type WipeOrigin } from "@/components/auth/RouteWipe";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import { fadeUp, stagger } from "@/lib/motion";
 
@@ -23,6 +24,8 @@ const validatePassword = (v: string) => (v.length >= 6 ? "" : "La contraseña ne
 export default function RegisterForm() {
   const router = useRouter();
   const shakeControls = useAnimation();
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const [wipe, setWipe] = useState<WipeOrigin | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -72,12 +75,15 @@ export default function RegisterForm() {
     }
 
     setSuccess(true);
+    const rect = submitRef.current?.getBoundingClientRect();
+    setWipe(rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: window.innerWidth / 2, y: window.innerHeight / 2 });
     toast.success("¡Cuenta creada!");
-    setTimeout(() => router.push("/boards"), 600);
+    setTimeout(() => router.push("/boards"), 850);
   };
 
   return (
     <motion.div animate={shakeControls}>
+      <RouteWipe origin={wipe} />
       <AnimatePresence>
         {error && (
           <motion.div
@@ -155,6 +161,7 @@ export default function RegisterForm() {
 
         <motion.div variants={fadeUp}>
           <motion.button
+            ref={submitRef}
             type="submit"
             disabled={loading || success}
             whileHover={!loading && !success ? { scale: 1.015 } : {}}

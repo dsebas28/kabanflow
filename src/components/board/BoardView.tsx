@@ -13,7 +13,9 @@ import {
   type DragEndEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Plus, X } from "lucide-react";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { ArrowLeft, Plus, Search, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSocket } from "@/context/SocketContext";
 import ListColumn from "./ListColumn";
@@ -23,6 +25,8 @@ import InviteMemberModal from "./InviteMemberModal";
 import PresenceBar, { type PresenceUser } from "./PresenceBar";
 import Avatar from "@/components/Avatar";
 import type { BoardDetail, BoardMemberModel, CardModel, ListModel } from "@/types/models";
+
+const LIST_ACCENTS = ["#94a3b8", "#7c3aed", "#f59e0b", "#14b8a6", "#ec4899", "#0ea5e9"];
 
 type Props = {
   board: BoardDetail;
@@ -38,6 +42,7 @@ export default function BoardView({ board, currentUser }: Props) {
   const [presence, setPresence] = useState<Record<string, PresenceUser & { lastSeen: number }>>({});
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
+  const [query, setQuery] = useState("");
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -260,18 +265,47 @@ export default function BoardView({ board, currentUser }: Props) {
   const presenceUsers = Object.values(presence).filter((u) => u.id !== currentUser.id);
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="border-b border-border px-6 py-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: board.color }} />
-              <h1 className="text-lg font-bold tracking-tight">{board.title}</h1>
+    <div className="relative flex min-h-full flex-col">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-72"
+        style={{ background: `radial-gradient(ellipse at 15% 0%, ${board.color}26, transparent 65%)` }}
+      />
+
+      <div className="sticky top-0 z-20 border-b border-border bg-background/75 px-4 py-4 backdrop-blur-md sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <div className="min-w-0">
+            <Link href="/boards" className="mb-1 inline-flex items-center gap-1 text-xs font-medium text-ink-faint transition-colors hover:text-ink">
+              <ArrowLeft className="h-3 w-3" /> Tableros
+            </Link>
+            <div className="flex items-center gap-2.5">
+              <motion.span
+                className="h-3 w-3 flex-shrink-0 rounded-full"
+                style={{ backgroundColor: board.color }}
+                animate={{ scale: [1, 1.25, 1] }}
+                transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <h1 className="font-display truncate text-xl font-bold tracking-tight sm:text-2xl">{board.title}</h1>
             </div>
-            {board.description && <p className="mt-1 text-sm text-ink-dim">{board.description}</p>}
+            {board.description && <p className="mt-1 max-w-xl truncate text-sm text-ink-dim">{board.description}</p>}
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-faint" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Buscar tarjetas"
+                aria-label="Buscar tarjetas"
+                className="h-9 w-40 rounded-xl border border-border bg-surface pl-9 pr-8 text-sm text-ink outline-none transition-all placeholder:text-ink-faint focus:w-56 focus:border-brand-500 sm:w-44"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} aria-label="Limpiar búsqueda" className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer text-ink-faint hover:text-ink">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
             <PresenceBar users={presenceUsers} />
             <div className="flex -space-x-2">
               <Avatar name={board.owner.name} color={board.owner.avatarColor} size={28} ring />
@@ -284,7 +318,7 @@ export default function BoardView({ board, currentUser }: Props) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto p-6">
+      <div className="relative flex-1 overflow-x-auto px-4 py-6 sm:px-6">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -303,6 +337,8 @@ export default function BoardView({ board, currentUser }: Props) {
                   onCardClick={setSelectedCard}
                   onAddCard={handleAddCard}
                   onDeleteList={handleDeleteList}
+                  query={query}
+                  accent={LIST_ACCENTS[list.position % LIST_ACCENTS.length]}
                 />
               ))}
 
