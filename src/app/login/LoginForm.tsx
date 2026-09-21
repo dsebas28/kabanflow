@@ -8,6 +8,7 @@ import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { AlertCircle, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import FloatingField from "@/components/auth/FloatingField";
+import RouteWipe, { type WipeOrigin } from "@/components/auth/RouteWipe";
 import { fadeUp, stagger } from "@/lib/motion";
 
 const DEMO_CREDENTIALS = { email: "demo@kanbanflow.app", password: "demo1234" };
@@ -28,6 +29,8 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const shakeControls = useAnimation();
+  const submitRef = useRef<HTMLButtonElement>(null);
+  const [wipe, setWipe] = useState<WipeOrigin | null>(null);
   const submittedDemoRef = useRef(false);
 
   const [email, setEmail] = useState("");
@@ -77,8 +80,10 @@ export default function LoginForm() {
     else localStorage.removeItem(REMEMBER_KEY);
 
     setSuccess(true);
+    const rect = submitRef.current?.getBoundingClientRect();
+    setWipe(rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 } : { x: window.innerWidth / 2, y: window.innerHeight / 2 });
     toast.success("¡Bienvenido de vuelta!");
-    setTimeout(() => router.push(from && from.startsWith("/boards") ? from : "/boards"), 600);
+    setTimeout(() => router.push(from && from.startsWith("/boards") ? from : "/boards"), 850);
   };
 
   useEffect(() => {
@@ -106,6 +111,7 @@ export default function LoginForm() {
 
   return (
     <motion.div animate={shakeControls}>
+      <RouteWipe origin={wipe} />
       <AnimatePresence>
         {error && (
           <motion.div
@@ -182,6 +188,7 @@ export default function LoginForm() {
 
         <motion.div variants={fadeUp}>
           <motion.button
+            ref={submitRef}
             type="submit"
             disabled={loading || success}
             whileHover={!loading && !success ? { scale: 1.015 } : {}}

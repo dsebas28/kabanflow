@@ -32,6 +32,9 @@ const SCRIPT: { who: Person; card: string; to: ColId }[] = [
   { who: "Ana", card: "c", to: "doing" },
 ];
 
+const IDLE_HINT = "Haz clic en una tarjeta para moverla tú";
+const NEXT_COL: Record<ColId, ColId> = { todo: "doing", doing: "done", done: "todo" };
+
 const WHO_COLOR: Record<Person, string> = { Ana: "#14b8a6", Tú: "#7c3aed" };
 
 type CursorState = { x: number; y: number; who: Person; grab: boolean; visible: boolean };
@@ -53,8 +56,9 @@ function moveCard(board: Board, id: string, to: ColId): Board {
 export default function LiveBoardDemo() {
   const reduceMotion = useReducedMotion();
   const box = useRef<HTMLDivElement>(null);
+  const pausedRef = useRef(false);
   const [board, setBoard] = useState<Board>(INITIAL);
-  const [activity, setActivity] = useState("Esperando cambios del equipo");
+  const [activity, setActivity] = useState(IDLE_HINT);
   const [grabbed, setGrabbed] = useState<string | null>(null);
   const [cursor, setCursor] = useState<CursorState>({ x: 0, y: 0, who: "Ana", grab: false, visible: false });
 
@@ -73,6 +77,7 @@ export default function LiveBoardDemo() {
       await sleep(1600);
       while (!cancelled) {
         for (const step of SCRIPT) {
+          while (pausedRef.current && !cancelled) await sleep(250);
           if (cancelled || !box.current) return;
           const cardEl = box.current.querySelector(`[data-card="${step.card}"]`);
           const colEl = box.current.querySelector(`[data-col="${step.to}"]`);
@@ -101,7 +106,7 @@ export default function LiveBoardDemo() {
         if (cancelled) return;
         setCursor((c) => ({ ...c, visible: false }));
         setBoard(INITIAL);
-        setActivity("Esperando cambios del equipo");
+        setActivity(IDLE_HINT);
         await sleep(1600);
       }
     })();
@@ -111,9 +116,30 @@ export default function LiveBoardDemo() {
     };
   }, [reduceMotion]);
 
+  const pause = () => {
+    pausedRef.current = true;
+    setCursor((c) => ({ ...c, visible: false, grab: false }));
+    setGrabbed(null);
+  };
+  const resume = () => {
+    pausedRef.current = false;
+  };
+  const advance = (id: string) => {
+    const from = (Object.keys(board) as ColId[]).find((col) => board[col].includes(id));
+    if (!from) return;
+    const to = NEXT_COL[from];
+    setBoard((b) => moveCard(b, id, to));
+    setActivity(`Tú moviste «${CARDS[id]}» a ${COLUMNS.find((c) => c.id === to)!.title}`);
+  };
+
   return (
     <div className="w-full">
-      <div ref={box} className="card-surface relative overflow-hidden p-4 shadow-2xl sm:p-5">
+      <div
+        ref={box}
+        onPointerEnter={pause}
+        onPointerLeave={resume}
+        className="card-surface relative overflow-hidden p-4 shadow-2xl sm:p-5"
+      >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
@@ -146,8 +172,15 @@ export default function LiveBoardDemo() {
                     layout
                     layoutId={`demo-${id}`}
                     data-card={id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Mover «${CARDS[id]}» a la siguiente columna`}
+                    onClick={() => advance(id)}
+                    onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), advance(id))}
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 420, damping: 34 }}
-                    className={`rounded-lg border bg-surface p-2 text-[11px] font-medium leading-snug text-ink sm:p-2.5 ${
+                    className={`cursor-pointer rounded-lg border bg-surface p-2 text-[11px] font-medium leading-snug text-ink sm:p-2.5 ${
                       grabbed === id ? "border-brand-500 shadow-lg shadow-brand-500/25" : "border-border shadow-sm"
                     }`}
                   >

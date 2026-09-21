@@ -12,17 +12,19 @@ export default function CardItem({
   card,
   onClick,
   dragging = false,
+  dimmed = false,
 }: {
   card: CardModel;
   onClick?: () => void;
   dragging?: boolean;
+  dimmed?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: card.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.4 : 1,
+    opacity: isDragging ? 0.4 : dimmed ? 0.3 : 1,
   };
 
   // Lazy initializer runs once on mount, not on every render — keeps the
@@ -37,10 +39,10 @@ export default function CardItem({
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`cursor-grab select-none active:cursor-grabbing ${dragging ? "rotate-2" : ""}`}
+      className={`card-in cursor-grab select-none transition-opacity duration-200 active:cursor-grabbing ${dragging ? "rotate-2 scale-105" : ""}`}
     >
       <TiltWrapper
-        className={`rounded-xl border border-border bg-surface p-3 text-left shadow-sm hover:shadow-md ${dragging ? "shadow-lg" : ""}`}
+        className={`rounded-xl border border-border bg-surface p-3.5 text-left shadow-sm transition-colors hover:border-brand-500/40 hover:shadow-md ${dragging ? "border-brand-500/60 shadow-2xl" : ""}`}
       >
         <p className="text-sm font-medium leading-snug text-ink">{card.title}</p>
         <div className="mt-2 flex items-center justify-between">

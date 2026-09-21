@@ -12,13 +12,25 @@ export async function GET() {
       OR: [{ ownerId: session.user.id }, { members: { some: { userId: session.user.id } } }],
     },
     include: {
-      owner: { select: { id: true, name: true } },
+      owner: { select: { id: true, name: true, avatarColor: true } },
+      members: { take: 3, include: { user: { select: { id: true, name: true, avatarColor: true } } } },
+      lists: {
+        orderBy: { position: "asc" },
+        select: { _count: { select: { cards: true } } },
+      },
       _count: { select: { lists: true, members: true } },
     },
     orderBy: { updatedAt: "desc" },
   });
 
-  return NextResponse.json({ boards });
+  // Progress heuristic: cards sitting in the last list count as done.
+  const summaries = boards.map(({ lists, ...board }) => ({
+    ...board,
+    cardCount: lists.reduce((sum, l) => sum + l._count.cards, 0),
+    doneCount: lists.length > 1 ? lists[lists.length - 1]._count.cards : 0,
+  }));
+
+  return NextResponse.json({ boards: summaries });
 }
 
 export async function POST(req: Request) {
