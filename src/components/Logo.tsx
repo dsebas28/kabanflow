@@ -13,7 +13,7 @@ export default function Logo({ size = 32, className = "" }: { size?: number; cla
   return (
     <div className={`inline-flex items-center gap-2 ${className}`}>
       <LogoMark size={size} />
-      <span className="font-bold tracking-tight" style={{ fontSize: size * 0.5 }}>
+      <span className="font-display font-extrabold tracking-tight" style={{ fontSize: size * 0.55 }}>
         Kanban<span className="text-brand-500">Flow</span>
       </span>
     </div>

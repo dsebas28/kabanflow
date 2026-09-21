@@ -5,8 +5,10 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, useAnimation, AnimatePresence } from "framer-motion";
-import { AlertCircle, ArrowRight, Check, Eye, EyeOff, Loader2, Mail, Lock, User } from "lucide-react";
+import { AlertCircle, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
+import FloatingField from "@/components/auth/FloatingField";
+import { fadeUp, stagger } from "@/lib/motion";
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -44,33 +46,25 @@ export default function RegisterForm() {
     setLoading(false);
 
     if (!result || result.error) {
-      setError("Cuenta creada, pero no se pudo iniciar sesión automáticamente.");
+      setError("Tu cuenta se creó, pero no pudimos iniciar sesión. Entra desde la página de inicio de sesión.");
       router.push("/login");
       return;
     }
 
     setSuccess(true);
     toast.success("¡Cuenta creada!");
-    setTimeout(() => router.push("/boards"), 500);
+    setTimeout(() => router.push("/boards"), 600);
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="w-full max-w-sm"
-    >
-    <motion.div animate={shakeControls} className="glass-panel p-7 sm:p-8">
-      <h1 className="text-2xl font-bold tracking-tight">Crea tu cuenta</h1>
-      <p className="mt-1 text-sm text-ink-dim">Es gratis y toma menos de un minuto.</p>
-
+    <motion.div animate={shakeControls}>
       <AnimatePresence>
         {error && (
           <motion.div
-            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-            animate={{ opacity: 1, height: "auto", marginTop: 20 }}
-            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            role="alert"
+            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+            animate={{ opacity: 1, height: "auto", marginBottom: 20 }}
+            exit={{ opacity: 0, height: 0, marginBottom: 0 }}
             className="flex items-start gap-2.5 overflow-hidden rounded-xl border border-error-500/20 bg-error-500/10 p-3.5 text-xs leading-relaxed text-error-500"
           >
             <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0" />
@@ -79,104 +73,69 @@ export default function RegisterForm() {
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div>
-          <label htmlFor="name" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-ink-dim">
-            Nombre
-          </label>
-          <div className="relative">
-            <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
-            <input
-              id="name"
-              type="text"
-              required
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="input-base pl-10"
-              placeholder="Tu nombre"
-            />
-          </div>
-        </div>
+      <motion.form onSubmit={handleSubmit} initial="hidden" animate="show" variants={stagger(0.09, 0.45)} className="space-y-4">
+        <motion.div variants={fadeUp}>
+          <FloatingField id="name" label="Nombre" required autoComplete="name" value={name} onChange={setName} />
+        </motion.div>
+        <motion.div variants={fadeUp}>
+          <FloatingField id="email" type="email" label="Correo" required autoComplete="email" value={email} onChange={setEmail} />
+        </motion.div>
+        <motion.div variants={fadeUp}>
+          <FloatingField
+            id="password"
+            type={showPassword ? "text" : "password"}
+            label="Contraseña (mínimo 6 caracteres)"
+            required
+            autoComplete="new-password"
+            value={password}
+            onChange={setPassword}
+            trailing={
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="cursor-pointer text-ink-faint hover:text-ink-dim"
+                aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            }
+          />
+        </motion.div>
 
-        <div>
-          <label htmlFor="email" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-ink-dim">
-            Correo
-          </label>
-          <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="input-base pl-10"
-              placeholder="tu@correo.com"
-            />
-          </div>
-        </div>
+        <motion.div variants={fadeUp}>
+          <motion.button
+            type="submit"
+            disabled={loading || success}
+            whileHover={!loading && !success ? { scale: 1.015 } : {}}
+            whileTap={!loading && !success ? { scale: 0.98 } : {}}
+            animate={success ? { backgroundColor: "#14b8a6" } : {}}
+            className="btn-primary btn-shimmer w-full py-3"
+          >
+            <AnimatePresence mode="wait" initial={false}>
+              {success ? (
+                <motion.span key="success" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2">
+                  <Check className="h-4 w-4" /> Listo
+                </motion.span>
+              ) : loading ? (
+                <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Creando cuenta
+                </motion.span>
+              ) : (
+                <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                  Crear cuenta
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+        </motion.div>
+      </motion.form>
 
-        <div>
-          <label htmlFor="password" className="mb-1.5 block text-xs font-bold uppercase tracking-wide text-ink-dim">
-            Contraseña
-          </label>
-          <div className="relative">
-            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint" />
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              required
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="input-base pl-10 pr-10"
-              placeholder="Mínimo 6 caracteres"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-faint hover:text-ink-dim cursor-pointer"
-              aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
-            >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
-          </div>
-        </div>
-
-        <motion.button
-          type="submit"
-          disabled={loading || success}
-          whileHover={!loading && !success ? { scale: 1.015 } : {}}
-          whileTap={!loading && !success ? { scale: 0.98 } : {}}
-          className="btn-primary w-full py-3"
-        >
-          <AnimatePresence mode="wait" initial={false}>
-            {success ? (
-              <motion.span key="success" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2">
-                <Check className="h-4 w-4" /> ¡Listo!
-              </motion.span>
-            ) : loading ? (
-              <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" /> Creando cuenta...
-              </motion.span>
-            ) : (
-              <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2">
-                Crear cuenta <ArrowRight className="h-4 w-4" />
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </motion.button>
-      </form>
-
-      <p className="mt-6 text-center text-xs text-ink-dim">
+      <p className="mt-8 text-center text-xs text-ink-dim">
         ¿Ya tienes cuenta?{" "}
         <Link href="/login" className="font-bold text-brand-500 hover:underline">
           Inicia sesión
         </Link>
       </p>
-    </motion.div>
     </motion.div>
   );
 }
