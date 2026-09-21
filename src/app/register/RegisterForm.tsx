@@ -8,7 +8,17 @@ import { motion, useAnimation, AnimatePresence } from "framer-motion";
 import { AlertCircle, Check, Eye, EyeOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import FloatingField from "@/components/auth/FloatingField";
+import PasswordStrength from "@/components/auth/PasswordStrength";
 import { fadeUp, stagger } from "@/lib/motion";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateName = (v: string) => (v.trim().length >= 2 ? "" : "Escribe tu nombre (mínimo 2 letras).");
+const validateEmail = (v: string) => {
+  if (!v.trim()) return "Escribe tu correo.";
+  return EMAIL_RE.test(v.trim()) ? "" : "Ese correo no parece válido. Revisa que tenga @ y un dominio.";
+};
+const validatePassword = (v: string) => (v.length >= 6 ? "" : "La contraseña necesita al menos 6 caracteres.");
 
 export default function RegisterForm() {
   const router = useRouter();
@@ -18,15 +28,25 @@ export default function RegisterForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({ name: "", email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
+  const shake = () => shakeControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
+    const errors = { name: validateName(name), email: validateEmail(email), password: validatePassword(password) };
+    setFieldErrors(errors);
+    if (errors.name || errors.email || errors.password) {
+      shake();
+      return;
+    }
+
+    setLoading(true);
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -38,7 +58,7 @@ export default function RegisterForm() {
       setLoading(false);
       setError(data.error || "No se pudo crear la cuenta.");
       toast.error(data.error || "No se pudo crear la cuenta");
-      shakeControls.start({ x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.5 } });
+      shake();
       return;
     }
 
@@ -46,7 +66,7 @@ export default function RegisterForm() {
     setLoading(false);
 
     if (!result || result.error) {
-      setError("Tu cuenta se creó, pero no pudimos iniciar sesión. Entra desde la página de inicio de sesión.");
+      toast.error("Tu cuenta se creó, pero no pudimos iniciar sesión. Entra desde aquí.");
       router.push("/login");
       return;
     }
@@ -73,22 +93,52 @@ export default function RegisterForm() {
         )}
       </AnimatePresence>
 
-      <motion.form onSubmit={handleSubmit} initial="hidden" animate="show" variants={stagger(0.09, 0.45)} className="space-y-4">
+      <motion.form onSubmit={handleSubmit} noValidate initial="hidden" animate="show" variants={stagger(0.09, 0.45)} className="space-y-4">
         <motion.div variants={fadeUp}>
-          <FloatingField id="name" label="Nombre" required autoComplete="name" value={name} onChange={setName} />
+          <FloatingField
+            id="name"
+            label="Nombre"
+            autoComplete="name"
+            autoFocus
+            value={name}
+            error={fieldErrors.name}
+            onChange={(v) => {
+              setName(v);
+              if (fieldErrors.name) setFieldErrors((f) => ({ ...f, name: validateName(v) }));
+            }}
+            onBlur={() => name && setFieldErrors((f) => ({ ...f, name: validateName(name) }))}
+          />
         </motion.div>
+
         <motion.div variants={fadeUp}>
-          <FloatingField id="email" type="email" label="Correo" required autoComplete="email" value={email} onChange={setEmail} />
+          <FloatingField
+            id="email"
+            type="email"
+            label="Correo"
+            autoComplete="email"
+            value={email}
+            error={fieldErrors.email}
+            onChange={(v) => {
+              setEmail(v);
+              if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: validateEmail(v) }));
+            }}
+            onBlur={() => email && setFieldErrors((f) => ({ ...f, email: validateEmail(email) }))}
+          />
         </motion.div>
+
         <motion.div variants={fadeUp}>
           <FloatingField
             id="password"
             type={showPassword ? "text" : "password"}
-            label="Contraseña (mínimo 6 caracteres)"
-            required
+            label="Contraseña"
             autoComplete="new-password"
             value={password}
-            onChange={setPassword}
+            error={fieldErrors.password}
+            hint="Mínimo 6 caracteres. Mezcla mayúsculas, números y símbolos para hacerla más fuerte."
+            onChange={(v) => {
+              setPassword(v);
+              if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: validatePassword(v) }));
+            }}
             trailing={
               <button
                 type="button"
@@ -100,6 +150,7 @@ export default function RegisterForm() {
               </button>
             }
           />
+          <PasswordStrength password={password} />
         </motion.div>
 
         <motion.div variants={fadeUp}>
