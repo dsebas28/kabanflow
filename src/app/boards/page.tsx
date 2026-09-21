@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Layers, Users } from "lucide-react";
 import CreateBoardModal from "@/components/CreateBoardModal";
+import TiltWrapper from "@/components/TiltWrapper";
 import type { BoardSummary } from "@/types/models";
 
 export default function BoardsPage() {
@@ -53,19 +54,27 @@ export default function BoardsPage() {
       ) : (
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {boards.map((board, i) => (
-            <motion.div key={board.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
-              <Link href={`/boards/${board.id}`} className="card-surface block h-full p-5 transition-shadow hover:shadow-md">
-                <span className="inline-block h-2 w-10 rounded-full" style={{ backgroundColor: board.color }} />
-                <h3 className="mt-3 text-sm font-bold">{board.title}</h3>
-                {board.description && <p className="mt-1 line-clamp-2 text-xs text-ink-dim">{board.description}</p>}
-                <div className="mt-4 flex items-center gap-4 text-xs text-ink-faint">
-                  <span className="flex items-center gap-1">
-                    <Layers className="h-3.5 w-3.5" /> {board._count.lists} listas
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Users className="h-3.5 w-3.5" /> {board._count.members + 1} miembros
-                  </span>
-                </div>
+            <motion.div
+              key={board.id}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileHover={{ y: -4 }}
+              transition={{ delay: i * 0.04 }}
+            >
+              <Link href={`/boards/${board.id}`} className="block h-full">
+                <TiltWrapper className="card-surface h-full p-5 hover:shadow-md">
+                  <span className="inline-block h-2 w-10 rounded-full" style={{ backgroundColor: board.color }} />
+                  <h3 className="mt-3 text-sm font-bold">{board.title}</h3>
+                  {board.description && <p className="mt-1 line-clamp-2 text-xs text-ink-dim">{board.description}</p>}
+                  <div className="mt-4 flex items-center gap-4 text-xs text-ink-faint">
+                    <span className="flex items-center gap-1">
+                      <Layers className="h-3.5 w-3.5" /> {board._count.lists} listas
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Users className="h-3.5 w-3.5" /> {board._count.members + 1} miembros
+                    </span>
+                  </div>
+                </TiltWrapper>
               </Link>
             </motion.div>
           ))}

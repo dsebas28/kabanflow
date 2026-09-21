@@ -5,6 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Calendar } from "lucide-react";
 import Avatar from "@/components/Avatar";
+import TiltWrapper from "@/components/TiltWrapper";
 import type { CardModel } from "@/types/models";
 
 export default function CardItem({
@@ -36,22 +37,24 @@ export default function CardItem({
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`cursor-grab select-none rounded-xl border border-border bg-surface p-3 text-left shadow-sm transition-shadow hover:shadow-md active:cursor-grabbing ${
-        dragging ? "rotate-2 shadow-lg" : ""
-      }`}
+      className={`cursor-grab select-none active:cursor-grabbing ${dragging ? "rotate-2" : ""}`}
     >
-      <p className="text-sm font-medium leading-snug text-ink">{card.title}</p>
-      <div className="mt-2 flex items-center justify-between">
-        {card.dueDate ? (
-          <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${dueSoon ? "text-error-500" : "text-ink-faint"}`}>
-            <Calendar className="h-3 w-3" />
-            {new Date(card.dueDate).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
-          </span>
-        ) : (
-          <span />
-        )}
-        <Avatar name={card.creator.name} color={card.creator.avatarColor} size={20} />
-      </div>
+      <TiltWrapper
+        className={`rounded-xl border border-border bg-surface p-3 text-left shadow-sm hover:shadow-md ${dragging ? "shadow-lg" : ""}`}
+      >
+        <p className="text-sm font-medium leading-snug text-ink">{card.title}</p>
+        <div className="mt-2 flex items-center justify-between">
+          {card.dueDate ? (
+            <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${dueSoon ? "text-error-500" : "text-ink-faint"}`}>
+              <Calendar className="h-3 w-3" />
+              {new Date(card.dueDate).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+            </span>
+          ) : (
+            <span />
+          )}
+          <Avatar name={card.creator.name} color={card.creator.avatarColor} size={20} />
+        </div>
+      </TiltWrapper>
     </div>
   );
 }

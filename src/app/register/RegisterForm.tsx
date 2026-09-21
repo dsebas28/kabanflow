@@ -55,7 +55,13 @@ export default function RegisterForm() {
   };
 
   return (
-    <motion.div animate={shakeControls} className="w-full max-w-sm">
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="w-full max-w-sm"
+    >
+    <motion.div animate={shakeControls} className="glass-panel p-7 sm:p-8">
       <h1 className="text-2xl font-bold tracking-tight">Crea tu cuenta</h1>
       <p className="mt-1 text-sm text-ink-dim">Es gratis y toma menos de un minuto.</p>
 
@@ -170,6 +176,7 @@ export default function RegisterForm() {
           Inicia sesión
         </Link>
       </p>
+    </motion.div>
     </motion.div>
   );
 }

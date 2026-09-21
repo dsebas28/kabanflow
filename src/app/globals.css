@@ -112,4 +112,7 @@ body {
   .input-base {
     @apply w-full rounded-xl border border-border bg-surface px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-faint transition-colors focus:border-brand-500 focus:outline-none focus:ring-4 focus:ring-brand-500/15;
   }
+  .glass-panel {
+    @apply rounded-3xl border border-border/60 bg-surface/80 shadow-xl backdrop-blur-xl;
+  }
 }
