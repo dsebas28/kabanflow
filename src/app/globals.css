@@ -178,3 +178,97 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .card-in, .skeleton { animation: none; }
 }
+
+/* ---------------------------------------------------------------------- *
+ * Editorial theme — scoped to the marketing pages (home, login, register)
+ * only. It overrides the same semantic tokens the app already uses
+ * (--background/--surface/--ink/...), so existing utilities like
+ * bg-background, text-ink and border-border pick it up automatically
+ * inside .editorial; only the new --mark accent needs arbitrary values.
+ * The signed-in app is untouched — this scope never wraps it.
+ * ---------------------------------------------------------------------- */
+.editorial {
+  --background: #f7f5ef;
+  --surface: #f7f5ef;
+  --surface-alt: #efece2;
+  --border: #d8d2c2;
+  --ink: #1a1814;
+  --ink-dim: #5b564c;
+  --ink-faint: #8c8778;
+  --mark: #b3261e;
+  --mark-ink: #ffffff;
+}
+.dark .editorial {
+  --background: #14130f;
+  --surface: #14130f;
+  --surface-alt: #1c1a15;
+  --border: #33301f;
+  --ink: #f1ede2;
+  --ink-dim: #b6b0a0;
+  --ink-faint: #7d7869;
+  --mark: #e2574c;
+  --mark-ink: #14130f;
+}
+
+.editorial .font-serif-ed {
+  font-family: var(--font-fraunces), Georgia, serif;
+}
+
+.editorial .btn-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1.5px solid var(--mark);
+  background: var(--mark);
+  color: var(--mark-ink);
+  padding: 0.7rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.editorial .btn-mark:hover {
+  background: transparent;
+  color: var(--mark);
+  transform: rotate(-0.6deg);
+}
+
+.editorial .btn-outline-ed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1.5px solid var(--ink);
+  color: var(--ink);
+  padding: 0.7rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.editorial .btn-outline-ed:hover {
+  background: var(--ink);
+  color: var(--background);
+  transform: rotate(0.6deg);
+}
+
+.editorial .underline-field {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1.5px solid var(--border);
+  padding: 0.6rem 0.1rem;
+  font-size: 0.95rem;
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.editorial .underline-field:focus {
+  border-color: var(--mark);
+}
+.editorial .underline-field.has-error {
+  border-color: var(--mark);
+}
