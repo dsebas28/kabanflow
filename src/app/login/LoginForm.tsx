@@ -181,7 +181,7 @@ export default function LoginForm() {
             type="checkbox"
             checked={remember}
             onChange={(e) => setRemember(e.target.checked)}
-            className="h-4 w-4 cursor-pointer rounded border-border accent-brand-600"
+            className="h-4 w-4 cursor-pointer rounded border-border accent-[var(--mark)]"
           />
           Recordar mi correo en este equipo
         </motion.label>
@@ -193,8 +193,8 @@ export default function LoginForm() {
             disabled={loading || success}
             whileHover={!loading && !success ? { scale: 1.015 } : {}}
             whileTap={!loading && !success ? { scale: 0.98 } : {}}
-            animate={success ? { backgroundColor: "#14b8a6" } : {}}
-            className="btn-primary btn-shimmer w-full py-3"
+            animate={success ? { backgroundColor: "#3d5a4c", borderColor: "#3d5a4c" } : {}}
+            className="btn-mark w-full py-3"
           >
             <AnimatePresence mode="wait" initial={false}>
               {success ? (
@@ -239,7 +239,7 @@ export default function LoginForm() {
 
       <p className="mt-8 text-center text-xs text-ink-dim">
         ¿Aún no tienes cuenta?{" "}
-        <Link href="/register" className="font-bold text-brand-500 hover:underline">
+        <Link href="/register" className="font-semibold text-[var(--mark)] hover:underline">
           Crea una gratis
         </Link>
       </p>

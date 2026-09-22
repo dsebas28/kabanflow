@@ -166,8 +166,8 @@ export default function RegisterForm() {
             disabled={loading || success}
             whileHover={!loading && !success ? { scale: 1.015 } : {}}
             whileTap={!loading && !success ? { scale: 0.98 } : {}}
-            animate={success ? { backgroundColor: "#14b8a6" } : {}}
-            className="btn-primary btn-shimmer w-full py-3"
+            animate={success ? { backgroundColor: "#3d5a4c", borderColor: "#3d5a4c" } : {}}
+            className="btn-mark w-full py-3"
           >
             <AnimatePresence mode="wait" initial={false}>
               {success ? (
@@ -190,7 +190,7 @@ export default function RegisterForm() {
 
       <p className="mt-8 text-center text-xs text-ink-dim">
         ¿Ya tienes cuenta?{" "}
-        <Link href="/login" className="font-bold text-brand-500 hover:underline">
+        <Link href="/login" className="font-semibold text-[var(--mark)] hover:underline">
           Inicia sesión
         </Link>
       </p>

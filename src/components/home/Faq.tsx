@@ -42,7 +42,7 @@ export default function Faq() {
               aria-expanded={isOpen}
               className="group flex w-full cursor-pointer items-center justify-between gap-6 py-5 text-left"
             >
-              <span className="font-display text-lg font-semibold tracking-tight transition-colors group-hover:text-brand-500">
+              <span className="font-serif-ed text-lg font-semibold tracking-tight transition-colors group-hover:text-[var(--mark)]">
                 {item.q}
               </span>
               <motion.span

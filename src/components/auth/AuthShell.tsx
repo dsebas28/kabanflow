@@ -1,15 +1,12 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import Logo from "@/components/Logo";
-import AuthVisual from "@/components/AuthVisual";
 import ThemeToggle from "@/components/ThemeToggle";
 import WordReveal from "@/components/WordReveal";
-import Aurora from "@/components/auth/Aurora";
-import PresenceDots from "@/components/auth/PresenceDots";
+import Masthead from "@/components/editorial/Masthead";
 import ActivityFeed from "@/components/auth/ActivityFeed";
-import SpotlightCard from "@/components/auth/SpotlightCard";
+import PresenceDots from "@/components/auth/PresenceDots";
 
-/** Split layout shared by login and register: scene on the left, form on the right. */
+/** Split layout shared by login and register: a "letter" panel on the left, the form on the right. */
 export default function AuthShell({
   title,
   subtitle,
@@ -22,56 +19,45 @@ export default function AuthShell({
   children: ReactNode;
 }) {
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.05fr_1fr]">
-      <aside className="relative hidden overflow-hidden bg-[#0b0a17] lg:block">
-        <Aurora />
-        <AuthVisual />
-        <div className="relative z-10 flex h-full flex-col justify-between p-10">
-          <Link href="/" className="w-fit text-white">
-            <Logo />
-          </Link>
-          <div className="max-w-md">
-            <WordReveal
-              as="h2"
-              text={panelHeadline}
-              delay={0.2}
-              className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white"
-            />
-            <div className="mt-6">
-              <PresenceDots />
-            </div>
-            <div className="mt-10 hidden [@media(min-height:780px)]:block">
-              <ActivityFeed />
-            </div>
+    <div className="editorial grid min-h-screen bg-background text-ink lg:grid-cols-[1fr_1fr]">
+      <aside className="relative hidden flex-col justify-between overflow-hidden border-r border-border bg-surface-alt p-10 lg:flex xl:p-14">
+        <Link href="/" className="w-fit">
+          <Masthead />
+        </Link>
+
+        <div className="max-w-md">
+          <span aria-hidden="true" className="font-serif-ed mb-4 block text-6xl italic leading-none text-[var(--mark)]">
+            “
+          </span>
+          <WordReveal as="h2" text={panelHeadline} delay={0.2} className="font-serif-ed text-4xl font-medium leading-[1.1] tracking-tight" />
+          <div className="mt-8 border-t border-border pt-6">
+            <PresenceDots />
+          </div>
+          <div className="mt-8 hidden [@media(min-height:820px)]:block">
+            <ActivityFeed />
           </div>
         </div>
+
+        <p className="font-serif-ed text-xs italic text-ink-faint">Cuaderno de bitácora — actualizado en tiempo real</p>
       </aside>
 
-      <main className="relative flex flex-col px-4 py-4 sm:px-10 sm:py-6">
+      <main className="relative flex flex-col px-5 py-5 sm:px-10 sm:py-6">
         <div className="flex items-center justify-between lg:justify-end">
           <Link href="/" className="lg:hidden">
-            <Logo size={28} />
+            <Masthead size={19} />
           </Link>
           <ThemeToggle />
         </div>
 
-        <div className="flex flex-1 items-center justify-center py-6 sm:py-10">
+        <div className="flex flex-1 items-center justify-center py-8 sm:py-10">
           <div className="w-full max-w-sm">
-            <div className="relative mb-5 overflow-hidden rounded-2xl bg-[#0b0a17] p-5 lg:hidden">
-              <Aurora />
-              <div className="relative">
-                <p className="font-display text-lg font-bold leading-snug text-white">{panelHeadline}</p>
-                <div className="mt-3">
-                  <PresenceDots />
-                </div>
-              </div>
+            <div className="mb-6 border-b border-border pb-6 lg:hidden">
+              <p className="font-serif-ed text-sm italic text-ink-faint">{panelHeadline}</p>
             </div>
 
-            <SpotlightCard className="p-6 sm:p-8">
-              <WordReveal text={title} className="font-display text-3xl font-bold tracking-tight" />
-              <p className="mt-2 text-sm text-ink-dim">{subtitle}</p>
-              <div className="mt-7">{children}</div>
-            </SpotlightCard>
+            <WordReveal text={title} className="font-serif-ed text-3xl font-medium tracking-tight" />
+            <p className="mt-2 text-sm text-ink-dim">{subtitle}</p>
+            <div className="mt-8">{children}</div>
           </div>
         </div>
       </main>

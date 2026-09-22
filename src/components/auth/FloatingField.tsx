@@ -13,7 +13,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange"> &
   hint?: ReactNode;
 };
 
-/** Text input whose label rises into the border on focus or when filled. */
+/** Underline-style field: label sits above, a hairline rule underneath draws in red on focus. */
 export default function FloatingField({
   id,
   label,
@@ -28,19 +28,14 @@ export default function FloatingField({
   ...rest
 }: Props) {
   const [focused, setFocused] = useState(false);
-  const lifted = focused || value.length > 0;
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
-  const labelColor = error ? "#ef4444" : focused ? "#8b5cf6" : "#94a3b8";
 
   return (
     <div>
+      <label htmlFor={id} className="mb-1.5 block text-[13px] font-medium text-ink-dim">
+        {label}
+      </label>
       <div className="relative">
-        <motion.div
-          aria-hidden="true"
-          className={`pointer-events-none absolute -inset-1 rounded-2xl blur-md ${error ? "bg-error-500/20" : "bg-brand-500/20"}`}
-          animate={{ opacity: focused ? 1 : 0 }}
-          transition={{ duration: 0.25 }}
-        />
         <input
           id={id}
           value={value}
@@ -53,24 +48,20 @@ export default function FloatingField({
             setFocused(false);
             onBlur?.(e);
           }}
-          placeholder=" "
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
-          className={`relative w-full rounded-xl border bg-surface px-4 pb-2 pt-6 text-sm text-ink transition-colors focus:outline-none ${
-            error ? "border-error-500 focus:border-error-500" : "border-border focus:border-brand-500"
-          } ${trailing ? "pr-11" : ""} ${className}`}
+          className={`underline-field ${error ? "has-error" : ""} ${trailing ? "pr-9" : ""} ${className}`}
           {...rest}
         />
-        <motion.label
-          htmlFor={id}
-          className="pointer-events-none absolute left-4 origin-left"
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-0 h-[1.5px] w-full bg-[var(--mark)]"
+          style={{ transformOrigin: "left" }}
           initial={false}
-          animate={lifted ? { top: 8, scale: 0.75, color: labelColor } : { top: 17, scale: 1, color: labelColor }}
-          transition={{ type: "spring", stiffness: 420, damping: 32 }}
-        >
-          {label}
-        </motion.label>
-        {trailing && <div className="absolute right-3 top-1/2 -translate-y-1/2">{trailing}</div>}
+          animate={{ scaleX: focused && !error ? 1 : 0 }}
+          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        />
+        {trailing && <div className="absolute right-1 top-1/2 -translate-y-1/2">{trailing}</div>}
       </div>
 
       <AnimatePresence initial={false}>
@@ -82,7 +73,7 @@ export default function FloatingField({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden pt-1.5 text-xs font-medium text-error-500"
+            className="overflow-hidden pt-1.5 text-xs font-medium text-[var(--mark)]"
           >
             {error}
           </motion.p>

@@ -4,15 +4,15 @@ import { motion, useReducedMotion } from "framer-motion";
 import Avatar from "@/components/Avatar";
 
 const PEOPLE = [
-  { name: "Ana Torres", color: "#14b8a6" },
-  { name: "Cuenta Demo", color: "#7c3aed" },
-  { name: "Luis Mora", color: "#f59e0b" },
+  { name: "Ana Torres", color: "#b3261e" },
+  { name: "Cuenta Demo", color: "#1a1814" },
+  { name: "Luis Mora", color: "#8c6d1f" },
 ];
 
 export default function PresenceDots() {
   const reduceMotion = useReducedMotion();
   return (
-    <div className="flex items-center gap-3 text-sm text-white/70">
+    <div className="flex items-center gap-3 text-sm text-ink-dim">
       <div className="flex -space-x-2">
         {PEOPLE.map((p, i) => (
           <motion.div
@@ -29,8 +29,8 @@ export default function PresenceDots() {
         ))}
       </div>
       <span className="relative flex h-2 w-2">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-400 opacity-75" />
-        <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-400" />
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--mark)] opacity-60" />
+        <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--mark)]" />
       </span>
       <span>Tu equipo ya está en el tablero</span>
     </div>

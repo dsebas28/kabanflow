@@ -10,8 +10,8 @@ type Person = "Ana" | "Tú";
 
 const COLUMNS: { id: ColId; title: string; dot: string }[] = [
   { id: "todo", title: "Por hacer", dot: "#94a3b8" },
-  { id: "doing", title: "En progreso", dot: "#7c3aed" },
-  { id: "done", title: "Hecho", dot: "#14b8a6" },
+  { id: "doing", title: "En progreso", dot: "#b3261e" },
+  { id: "done", title: "Hecho", dot: "#3d5a4c" },
 ];
 
 const CARDS: Record<string, string> = {
@@ -35,7 +35,7 @@ const SCRIPT: { who: Person; card: string; to: ColId }[] = [
 const IDLE_HINT = "Haz clic en una tarjeta para moverla tú";
 const NEXT_COL: Record<ColId, ColId> = { todo: "doing", doing: "done", done: "todo" };
 
-const WHO_COLOR: Record<Person, string> = { Ana: "#14b8a6", Tú: "#7c3aed" };
+const WHO_COLOR: Record<Person, string> = { Ana: "#b3261e", Tú: "#3d5a4c" };
 
 type CursorState = { x: number; y: number; who: Person; grab: boolean; visible: boolean };
 
@@ -138,20 +138,20 @@ export default function LiveBoardDemo() {
         ref={box}
         onPointerEnter={pause}
         onPointerLeave={resume}
-        className="card-surface relative overflow-hidden p-4 shadow-2xl sm:p-5"
+        className="relative overflow-hidden border border-ink bg-surface p-4 sm:p-5"
       >
         <div className="flex items-center justify-between border-b border-border pb-3">
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 rounded-full bg-brand-500" />
-            <span className="font-display text-sm font-bold">Lanzamiento de producto</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-[var(--mark)]" />
+            <span className="font-serif-ed text-sm font-semibold">Lanzamiento de producto</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              <Avatar name="Ana Torres" color="#14b8a6" size={24} ring />
-              <Avatar name="Cuenta Demo" color="#7c3aed" size={24} ring />
+              <Avatar name="Ana Torres" color="#b3261e" size={24} ring />
+              <Avatar name="Cuenta Demo" color="#3d5a4c" size={24} ring />
             </div>
-            <span className="flex items-center gap-1.5 rounded-full bg-accent-500/10 px-2 py-0.5 text-[10px] font-semibold text-accent-600 dark:text-accent-400">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent-500" />
+            <span className="flex items-center gap-1.5 rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold text-ink-dim">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[var(--mark)]" />
               En vivo
             </span>
           </div>
@@ -159,7 +159,7 @@ export default function LiveBoardDemo() {
 
         <div className="mt-4 grid grid-cols-3 gap-2.5 sm:gap-3">
           {COLUMNS.map((col) => (
-            <div key={col.id} data-col={col.id} className="min-h-[250px] rounded-xl bg-surface-alt p-2 sm:p-2.5">
+            <div key={col.id} data-col={col.id} className="min-h-[250px] rounded-sm bg-surface-alt p-2 sm:p-2.5">
               <div className="mb-2 flex items-center gap-1.5 px-0.5">
                 <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: col.dot }} />
                 <span className="text-[11px] font-bold text-ink-dim">{col.title}</span>
@@ -181,7 +181,7 @@ export default function LiveBoardDemo() {
                     whileTap={{ scale: 0.97 }}
                     transition={{ type: "spring", stiffness: 420, damping: 34 }}
                     className={`cursor-pointer rounded-lg border bg-surface p-2 text-[11px] font-medium leading-snug text-ink sm:p-2.5 ${
-                      grabbed === id ? "border-brand-500 shadow-lg shadow-brand-500/25" : "border-border shadow-sm"
+                      grabbed === id ? "border-[var(--mark)] shadow-md" : "border-border shadow-sm"
                     }`}
                   >
                     {CARDS[id]}

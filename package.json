@@ -20,9 +20,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^6.19.3",
-    "@react-three/drei": "^10.7.8",
-    "@react-three/fiber": "^9.7.0",
-    "@types/three": "^0.186.0",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
@@ -36,7 +33,6 @@
     "react-hot-toast": "^2.6.1",
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
-    "three": "^0.186.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {

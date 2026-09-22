@@ -5,11 +5,11 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Avatar from "@/components/Avatar";
 
 const EVENTS = [
-  { who: "Ana Torres", color: "#14b8a6", text: "movió «Diseñar wireframes» a En progreso" },
-  { who: "Luis Mora", color: "#f59e0b", text: "comentó en «Configurar analítica»" },
-  { who: "Cuenta Demo", color: "#7c3aed", text: "creó la tarjeta «Revisar accesibilidad»" },
-  { who: "Ana Torres", color: "#14b8a6", text: "movió «Publicar versión 1.0» a Hecho" },
-  { who: "Luis Mora", color: "#f59e0b", text: "fijó fecha límite en «Maquetar la landing»" },
+  { who: "Ana Torres", color: "#b3261e", text: "movió «Diseñar wireframes» a En progreso" },
+  { who: "Luis Mora", color: "#8c6d1f", text: "comentó en «Configurar analítica»" },
+  { who: "Cuenta Demo", color: "#1a1814", text: "creó la tarjeta «Revisar accesibilidad»" },
+  { who: "Ana Torres", color: "#b3261e", text: "movió «Publicar versión 1.0» a Hecho" },
+  { who: "Luis Mora", color: "#8c6d1f", text: "fijó fecha límite en «Maquetar la landing»" },
 ];
 
 const VISIBLE = 3;
@@ -41,11 +41,11 @@ export default function ActivityFeed() {
             animate={{ opacity: 1 - i * 0.28, y: 0, scale: 1 - i * 0.02 }}
             exit={{ opacity: 0, y: 16 }}
             transition={{ type: "spring", stiffness: 300, damping: 28 }}
-            className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.07] px-3.5 py-3 backdrop-blur-md"
+            className="flex items-center gap-3 border-t border-border py-3 first:border-t-0"
           >
-            <Avatar name={item.who} color={item.color} size={28} />
-            <p className="min-w-0 text-[13px] leading-snug text-white/85">
-              <span className="font-semibold text-white">{item.who}</span> {item.text}
+            <Avatar name={item.who} color={item.color} size={26} />
+            <p className="min-w-0 text-[13px] leading-snug text-ink-dim">
+              <span className="font-semibold text-ink">{item.who}</span> {item.text}
             </p>
           </motion.div>
         ))}

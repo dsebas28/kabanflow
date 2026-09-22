@@ -20,7 +20,7 @@ export default function RouteWipe({ origin }: { origin: WipeOrigin | null }) {
     <>
       <motion.div
         aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-[100] bg-gradient-to-br from-brand-500 to-brand-700"
+        className="pointer-events-none fixed inset-0 z-[100] bg-gradient-to-br from-[#b3261e] to-[#7a1a14]"
         initial={{ clipPath: clip(origin, "0px") }}
         animate={{ clipPath: clip(origin, "150vmax") }}
         transition={{ duration: 0.75, ease: [0.65, 0, 0.35, 1] }}

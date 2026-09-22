@@ -12,8 +12,8 @@ export default function TechMarquee() {
           <ul key={copy} aria-hidden={copy === 1} className="flex shrink-0 items-center">
             {TECH.map((name) => (
               <li key={name} className="flex items-center">
-                <span className="font-display px-8 text-2xl font-bold tracking-tight text-ink-faint sm:text-3xl">{name}</span>
-                <span className="h-1.5 w-1.5 rotate-45 bg-brand-500" />
+                <span className="font-serif-ed px-8 text-2xl font-medium italic tracking-tight text-ink-faint sm:text-3xl">{name}</span>
+                <span className="h-1.5 w-1.5 rotate-45 bg-[var(--mark)]" />
               </li>
             ))}
           </ul>
