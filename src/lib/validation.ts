@@ -55,3 +55,7 @@ export const reorderSchema = z.object({
     .min(1)
     .max(2),
 });
+
+export const createMessageSchema = z.object({
+  body: z.string().trim().min(1, "Escribe un mensaje").max(1000),
+});

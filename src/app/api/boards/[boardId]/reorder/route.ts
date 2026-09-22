@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { reorderSchema } from "@/lib/validation";
 import { emitToBoard } from "@/lib/socket";
+import { logActivity } from "@/lib/activity";
 
 type Params = { params: Promise<{ boardId: string }> };
 
@@ -29,7 +30,7 @@ export async function POST(req: Request, { params }: Params) {
   const listIds = parsed.data.lists.map((l) => l.id);
   const ownedLists = await prisma.list.findMany({
     where: { id: { in: listIds }, boardId },
-    select: { id: true },
+    select: { id: true, title: true },
   });
   if (ownedLists.length !== listIds.length) {
     return NextResponse.json({ error: "Alguna lista no pertenece a este tablero" }, { status: 400 });
@@ -43,6 +44,8 @@ export async function POST(req: Request, { params }: Params) {
     return NextResponse.json({ error: "Alguna tarjeta no pertenece a este tablero" }, { status: 400 });
   }
 
+  const before = await prisma.card.findMany({ where: { id: { in: cardIds } }, select: { id: true, title: true, listId: true } });
+
   await prisma.$transaction(
     parsed.data.lists.flatMap((list) =>
       list.cardIds.map((cardId, index) =>
@@ -52,5 +55,16 @@ export async function POST(req: Request, { params }: Params) {
   );
 
   emitToBoard(boardId, "board:reordered", { lists: parsed.data.lists, movedBy: session.user.id });
+
+  const listTitle = new Map(ownedLists.map((l) => [l.id, l.title]));
+  const moved = parsed.data.lists.flatMap((l) =>
+    l.cardIds
+      .map((id) => before.find((c) => c.id === id))
+      .filter((c): c is NonNullable<typeof c> => Boolean(c) && c!.listId !== l.id)
+      .map((c) => ({ title: c.title, to: listTitle.get(l.id) ?? "otra lista" })),
+  );
+  for (const m of moved.slice(0, 3)) {
+    await logActivity(boardId, session.user.id, `movió «${m.title}» a ${m.to}`);
+  }
   return NextResponse.json({ ok: true });
 }

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { updateBoardSchema } from "@/lib/validation";
+import { removeStoredFiles } from "@/lib/uploads";
 
 type Params = { params: Promise<{ boardId: string }> };
 
@@ -62,6 +63,8 @@ export async function DELETE(_req: Request, { params }: Params) {
   const access = await getBoardAccess(boardId, session.user.id);
   if (access.role !== "OWNER") return NextResponse.json({ error: "Solo el dueño puede eliminar el tablero" }, { status: 403 });
 
+  const files = await prisma.attachment.findMany({ where: { card: { list: { boardId } } }, select: { storedName: true } });
   await prisma.board.delete({ where: { id: boardId } });
+  await removeStoredFiles(files.map((f) => f.storedName));
   return NextResponse.json({ ok: true });
 }

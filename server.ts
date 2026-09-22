@@ -27,6 +27,10 @@ app.prepare().then(() => {
       socket.leave(`board:${boardId}`);
     });
 
+    socket.on("chat:typing", ({ boardId, user }: { boardId: string; user: { id: string; name: string } }) => {
+      socket.to(`board:${boardId}`).emit("chat:typing", user);
+    });
+
     socket.on("presence:update", ({ boardId, user }: { boardId: string; user: { id: string; name: string; color: string } }) => {
       socket.to(`board:${boardId}`).emit("presence:update", user);
     });

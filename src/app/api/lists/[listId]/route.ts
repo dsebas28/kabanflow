@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { updateListSchema } from "@/lib/validation";
 import { emitToBoard } from "@/lib/socket";
+import { logActivity } from "@/lib/activity";
+import { removeStoredFiles } from "@/lib/uploads";
 
 type Params = { params: Promise<{ listId: string }> };
 
@@ -34,13 +36,18 @@ export async function DELETE(_req: Request, { params }: Params) {
   if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { listId } = await params;
-  const list = await prisma.list.findUnique({ where: { id: listId }, select: { boardId: true } });
+  const list = await prisma.list.findUnique({
+    where: { id: listId },
+    select: { title: true, boardId: true, cards: { select: { attachments: { select: { storedName: true } } } } },
+  });
   if (!list) return NextResponse.json({ error: "Lista no encontrada" }, { status: 404 });
 
   const access = await getBoardAccess(list.boardId, session.user.id);
   if (!access.allowed) return NextResponse.json({ error: "No tienes acceso a este tablero" }, { status: 403 });
 
   await prisma.list.delete({ where: { id: listId } });
+  await removeStoredFiles(list.cards.flatMap((c) => c.attachments.map((a) => a.storedName)));
   emitToBoard(list.boardId, "list:deleted", { listId });
+  await logActivity(list.boardId, session.user.id, `eliminó la lista «${list.title}»`);
   return NextResponse.json({ ok: true });
 }

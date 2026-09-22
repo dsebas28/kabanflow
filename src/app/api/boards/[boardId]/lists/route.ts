@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { createListSchema } from "@/lib/validation";
 import { emitToBoard } from "@/lib/socket";
+import { logActivity } from "@/lib/activity";
 
 type Params = { params: Promise<{ boardId: string }> };
 
@@ -28,5 +29,6 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   emitToBoard(boardId, "list:created", { list });
+  await logActivity(boardId, session.user.id, `creó la lista «${list.title}»`);
   return NextResponse.json({ list }, { status: 201 });
 }

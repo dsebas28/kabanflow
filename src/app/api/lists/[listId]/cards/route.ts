@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { createCardSchema } from "@/lib/validation";
 import { emitToBoard } from "@/lib/socket";
+import { logActivity } from "@/lib/activity";
 
 type Params = { params: Promise<{ listId: string }> };
 
@@ -37,5 +38,6 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   emitToBoard(list.boardId, "card:created", { card });
+  await logActivity(list.boardId, session.user.id, `creó la tarjeta «${card.title}»`);
   return NextResponse.json({ card }, { status: 201 });
 }
