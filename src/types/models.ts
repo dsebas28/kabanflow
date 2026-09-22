@@ -23,6 +23,7 @@ export type CardModel = {
   createdAt: string;
   updatedAt: string;
   creator: { id: string; name: string; avatarColor: string };
+  _count?: { attachments: number; comments: number };
 };
 
 export type ListModel = {
@@ -55,4 +56,31 @@ export type CommentModel = {
   body: string;
   createdAt: string;
   author: { id: string; name: string; avatarColor: string };
+};
+
+export type PersonRef = { id: string; name: string; avatarColor: string };
+
+export type AttachmentModel = {
+  id: string;
+  name: string;
+  mimeType: string;
+  size: number;
+  createdAt: string;
+  cardId: string;
+  uploader: PersonRef;
+  card?: { title: string };
+};
+
+export type ChatMessage = {
+  id: string;
+  body: string;
+  createdAt: string;
+  author: PersonRef;
+};
+
+export type ActivityItem = {
+  id: string;
+  text: string;
+  createdAt: string;
+  actor: PersonRef;
 };

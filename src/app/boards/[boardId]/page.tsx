@@ -22,7 +22,10 @@ export default async function BoardPage({ params }: { params: Promise<{ boardId:
         include: {
           cards: {
             orderBy: { position: "asc" },
-            include: { creator: { select: { id: true, name: true, avatarColor: true } } },
+            include: {
+              creator: { select: { id: true, name: true, avatarColor: true } },
+              _count: { select: { attachments: true, comments: true } },
+            },
           },
         },
       },

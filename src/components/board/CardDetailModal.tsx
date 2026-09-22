@@ -2,19 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Calendar, Loader2, Send, Trash2, X } from "lucide-react";
+import { Calendar, Download, Loader2, Paperclip, Send, Trash2, UploadCloud, X } from "lucide-react";
 import toast from "react-hot-toast";
 import Avatar from "@/components/Avatar";
-import type { CardModel, CommentModel } from "@/types/models";
+import FileThumb from "@/components/board/FileThumb";
+import { useSocket } from "@/context/SocketContext";
+import { formatBytes } from "@/lib/format";
+import type { AttachmentModel, CardModel, CommentModel } from "@/types/models";
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 type Props = {
   card: CardModel | null;
   onClose: () => void;
   onUpdate: (cardId: string, patch: Partial<Pick<CardModel, "title" | "description" | "dueDate">>) => void;
   onDelete: (cardId: string) => void;
+  isOwner: boolean;
+  currentUserId: string;
 };
 
-export default function CardDetailModal({ card, onClose, onUpdate, onDelete }: Props) {
+export default function CardDetailModal({ card, onClose, onUpdate, onDelete, isOwner, currentUserId }: Props) {
   return (
     <AnimatePresence>
       {card && (
@@ -27,14 +34,18 @@ export default function CardDetailModal({ card, onClose, onUpdate, onDelete }: P
         >
           {/* Keyed by card.id so switching cards remounts this with fresh
               local state instead of syncing props into state via an effect. */}
-          <CardDetailModalContent key={card.id} card={card} onClose={onClose} onUpdate={onUpdate} onDelete={onDelete} />
+          <CardDetailModalContent key={card.id} card={card} onClose={onClose} onUpdate={onUpdate} onDelete={onDelete} isOwner={isOwner} currentUserId={currentUserId} />
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
 
-function CardDetailModalContent({ card, onClose, onUpdate, onDelete }: Props & { card: CardModel }) {
+function CardDetailModalContent({ card, onClose, onUpdate, onDelete, isOwner, currentUserId }: Props & { card: CardModel }) {
+  const socket = useSocket();
+  const [attachments, setAttachments] = useState<AttachmentModel[]>([]);
+  const [uploading, setUploading] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
   const [title, setTitle] = useState(card.title);
   const [description, setDescription] = useState(card.description ?? "");
   const [dueDate, setDueDate] = useState(card.dueDate ? card.dueDate.slice(0, 10) : "");
@@ -50,12 +61,59 @@ function CardDetailModalContent({ card, onClose, onUpdate, onDelete }: Props & {
       .then((data) => {
         if (ignore) return;
         if (data?.card?.comments) setComments(data.card.comments);
+        if (data?.card?.attachments) setAttachments((prev) => [...data.card.attachments, ...prev.filter((p) => !data.card.attachments.some((a: AttachmentModel) => a.id === p.id))]);
         setLoadingComments(false);
       });
     return () => {
       ignore = true;
     };
   }, [card.id]);
+
+  useEffect(() => {
+    if (!socket) return;
+    const onAdded = ({ attachment }: { attachment: AttachmentModel }) => {
+      if (attachment.cardId !== card.id) return;
+      setAttachments((prev) => (prev.some((a) => a.id === attachment.id) ? prev : [attachment, ...prev]));
+    };
+    const onDeleted = ({ attachmentId, cardId }: { attachmentId: string; cardId: string }) => {
+      if (cardId === card.id) setAttachments((prev) => prev.filter((a) => a.id !== attachmentId));
+    };
+    socket.on("attachment:added", onAdded);
+    socket.on("attachment:deleted", onDeleted);
+    return () => {
+      socket.off("attachment:added", onAdded);
+      socket.off("attachment:deleted", onDeleted);
+    };
+  }, [socket, card.id]);
+
+  const uploadFiles = async (fileList: FileList | File[]) => {
+    for (const file of Array.from(fileList)) {
+      if (file.size > MAX_UPLOAD_BYTES) {
+        toast.error("«" + file.name + "» pesa más de 5 MB");
+        continue;
+      }
+      setUploading((n) => n + 1);
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/cards/" + card.id + "/attachments", { method: "POST", body: form });
+      setUploading((n) => n - 1);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        toast.error(data.error || "No se pudo subir el archivo");
+        continue;
+      }
+      setAttachments((prev) => (prev.some((a) => a.id === data.attachment.id) ? prev : [data.attachment, ...prev]));
+    }
+  };
+
+  const removeAttachment = async (id: string) => {
+    const res = await fetch("/api/attachments/" + id, { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("No se pudo eliminar el archivo");
+      return;
+    }
+    setAttachments((prev) => prev.filter((a) => a.id !== id));
+  };
 
   const saveTitle = () => {
     if (title.trim() && title.trim() !== card.title) onUpdate(card.id, { title: title.trim() });
@@ -128,6 +186,62 @@ function CardDetailModalContent({ card, onClose, onUpdate, onDelete }: Props & {
             <Calendar className="h-3.5 w-3.5" /> Fecha límite
           </label>
           <input type="date" value={dueDate} onChange={(e) => saveDueDate(e.target.value)} className="input-base text-sm" />
+        </div>
+
+        <div>
+          <label className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-ink-dim">
+            <Paperclip className="h-3.5 w-3.5" /> Archivos
+          </label>
+          <label
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(true);
+            }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
+            }}
+            className={`flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed px-4 py-5 text-center text-xs transition-colors ${
+              dragOver ? "border-brand-500 bg-brand-500/10 text-brand-600" : "border-border text-ink-dim hover:border-brand-500/50"
+            }`}
+          >
+            <input
+              type="file"
+              multiple
+              className="sr-only"
+              onChange={(e) => {
+                if (e.target.files?.length) uploadFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+            {uploading > 0 ? <Loader2 className="h-5 w-5 animate-spin" /> : <UploadCloud className="h-5 w-5" />}
+            <span className="font-semibold">{uploading > 0 ? "Subiendo..." : "Suelta archivos aquí o haz clic"}</span>
+            <span className="text-ink-faint">Imágenes, PDF, Office, texto o ZIP · máximo 5 MB</span>
+          </label>
+
+          {attachments.length > 0 && (
+            <ul className="mt-3 space-y-2">
+              {attachments.map((a) => (
+                <li key={a.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface p-2">
+                  <FileThumb id={a.id} name={a.name} mimeType={a.mimeType} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium" title={a.name}>{a.name}</p>
+                    <p className="text-[11px] text-ink-faint">{formatBytes(a.size)} · {a.uploader.name}</p>
+                  </div>
+                  <a href={"/api/attachments/" + a.id} target="_blank" rel="noreferrer" download={a.name} aria-label={"Descargar " + a.name} className="btn-ghost !p-2">
+                    <Download className="h-4 w-4" />
+                  </a>
+                  {(isOwner || a.uploader.id === currentUserId) && (
+                    <button type="button" onClick={() => removeAttachment(a.id)} aria-label={"Eliminar " + a.name} className="btn-ghost !p-2 hover:!text-error-500">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <div>

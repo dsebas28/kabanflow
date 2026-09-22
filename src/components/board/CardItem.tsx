@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Calendar } from "lucide-react";
+import { Calendar, MessageSquare, Paperclip } from "lucide-react";
 import Avatar from "@/components/Avatar";
 import TiltWrapper from "@/components/TiltWrapper";
 import type { CardModel } from "@/types/models";
@@ -45,6 +45,20 @@ export default function CardItem({
         className={`rounded-xl border border-border bg-surface p-3.5 text-left shadow-sm transition-colors hover:border-brand-500/40 hover:shadow-md ${dragging ? "border-brand-500/60 shadow-2xl" : ""}`}
       >
         <p className="text-sm font-medium leading-snug text-ink">{card.title}</p>
+        {((card._count?.attachments ?? 0) > 0 || (card._count?.comments ?? 0) > 0) && (
+          <div className="mt-2 flex items-center gap-3 text-[11px] text-ink-faint">
+            {(card._count?.attachments ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1" title="Archivos adjuntos">
+                <Paperclip className="h-3 w-3" /> {card._count?.attachments}
+              </span>
+            )}
+            {(card._count?.comments ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1" title="Comentarios">
+                <MessageSquare className="h-3 w-3" /> {card._count?.comments}
+              </span>
+            )}
+          </div>
+        )}
         <div className="mt-2 flex items-center justify-between">
           {card.dueDate ? (
             <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${dueSoon ? "text-error-500" : "text-ink-faint"}`}>

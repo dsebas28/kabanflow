@@ -15,7 +15,7 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Search, X } from "lucide-react";
+import { ArrowLeft, MessagesSquare, Plus, Search, X } from "lucide-react";
 import toast from "react-hot-toast";
 import { useSocket } from "@/context/SocketContext";
 import ListColumn from "./ListColumn";
@@ -23,6 +23,8 @@ import CardItem from "./CardItem";
 import CardDetailModal from "./CardDetailModal";
 import InviteMemberModal from "./InviteMemberModal";
 import PresenceBar, { type PresenceUser } from "./PresenceBar";
+import BoardPanel from "./BoardPanel";
+import { useBoardPanel, type PanelTab } from "@/hooks/useBoardPanel";
 import Avatar from "@/components/Avatar";
 import type { BoardDetail, BoardMemberModel, CardModel, ListModel } from "@/types/models";
 
@@ -43,6 +45,10 @@ export default function BoardView({ board, currentUser }: Props) {
   const [addingList, setAddingList] = useState(false);
   const [newListTitle, setNewListTitle] = useState("");
   const [query, setQuery] = useState("");
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelTab, setPanelTab] = useState<PanelTab>("chat");
+  const isOwner = board.ownerId === currentUser.id;
+  const panel = useBoardPanel({ boardId: board.id, currentUser, socket, panelOpen, tab: panelTab });
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
 
@@ -63,7 +69,7 @@ export default function BoardView({ board, currentUser }: Props) {
     };
     const onCardUpdated = ({ card }: { card: CardModel }) => {
       setLists((prev) =>
-        prev.map((l) => (l.id === card.listId ? { ...l, cards: l.cards.map((c) => (c.id === card.id ? card : c)) } : l)),
+        prev.map((l) => (l.id === card.listId ? { ...l, cards: l.cards.map((c) => (c.id === card.id ? { ...c, ...card } : c)) } : l)),
       );
       setSelectedCard((prev) => (prev && prev.id === card.id ? card : prev));
     };
@@ -94,6 +100,21 @@ export default function BoardView({ board, currentUser }: Props) {
         return next;
       });
     };
+    const bumpCount = (cardId: string, key: "attachments" | "comments", delta: number) => {
+      setLists((prev) =>
+        prev.map((l) => ({
+          ...l,
+          cards: l.cards.map((c) =>
+            c.id === cardId
+              ? { ...c, _count: { attachments: 0, comments: 0, ...c._count, [key]: Math.max(0, (c._count?.[key] ?? 0) + delta) } }
+              : c,
+          ),
+        })),
+      );
+    };
+    const onAttachmentAdded = ({ attachment }: { attachment: { cardId: string } }) => bumpCount(attachment.cardId, "attachments", 1);
+    const onAttachmentDeleted = ({ cardId }: { cardId: string }) => bumpCount(cardId, "attachments", -1);
+    const onCommentCreated = ({ comment }: { comment: { cardId: string } }) => bumpCount(comment.cardId, "comments", 1);
     const onMemberAdded = ({ member }: { member: BoardMemberModel }) => {
       setMembers((prev) => (prev.some((m) => m.id === member.id) ? prev : [...prev, member]));
     };
@@ -109,6 +130,9 @@ export default function BoardView({ board, currentUser }: Props) {
     socket.on("list:deleted", onListDeleted);
     socket.on("board:reordered", onReordered);
     socket.on("member:added", onMemberAdded);
+    socket.on("attachment:added", onAttachmentAdded);
+    socket.on("attachment:deleted", onAttachmentDeleted);
+    socket.on("comment:created", onCommentCreated);
     socket.on("presence:update", onPresence);
 
     return () => {
@@ -122,6 +146,9 @@ export default function BoardView({ board, currentUser }: Props) {
       socket.off("list:deleted", onListDeleted);
       socket.off("board:reordered", onReordered);
       socket.off("member:added", onMemberAdded);
+      socket.off("attachment:added", onAttachmentAdded);
+      socket.off("attachment:deleted", onAttachmentDeleted);
+      socket.off("comment:created", onCommentCreated);
       socket.off("presence:update", onPresence);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -313,12 +340,34 @@ export default function BoardView({ board, currentUser }: Props) {
                 <Avatar key={m.id} name={m.user.name} color={m.user.avatarColor} size={28} ring />
               ))}
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                setPanelOpen((o) => !o);
+                if (panelTab === "chat") panel.markRead();
+              }}
+              aria-pressed={panelOpen}
+              className={`relative flex h-9 cursor-pointer items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-colors ${
+                panelOpen ? "border-brand-500 bg-brand-500/10 text-brand-600 dark:text-brand-300" : "border-border bg-surface text-ink-dim hover:text-ink"
+              }`}
+            >
+              <MessagesSquare className="h-3.5 w-3.5" /> Panel
+              {panel.unread > 0 && !panelOpen && (
+                <motion.span
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-bold text-white"
+                >
+                  {panel.unread}
+                </motion.span>
+              )}
+            </button>
             <InviteMemberModal boardId={board.id} onInvited={(member) => setMembers((prev) => [...prev, member])} />
           </div>
         </div>
       </div>
 
-      <div className="relative flex-1 overflow-x-auto px-4 py-6 sm:px-6">
+      <div className={`relative flex-1 overflow-x-auto px-4 py-6 transition-[padding] duration-300 sm:px-6 ${panelOpen ? "lg:pr-[416px]" : ""}`}>
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
@@ -378,8 +427,23 @@ export default function BoardView({ board, currentUser }: Props) {
         </DndContext>
       </div>
 
+      <BoardPanel
+        open={panelOpen}
+        tab={panelTab}
+        onTabChange={(t) => {
+          setPanelTab(t);
+          if (t === "chat") panel.markRead();
+        }}
+        onClose={() => setPanelOpen(false)}
+        data={panel}
+        currentUserId={currentUser.id}
+        isOwner={isOwner}
+      />
+
       <CardDetailModal
         card={selectedCard}
+        isOwner={isOwner}
+        currentUserId={currentUser.id}
         onClose={() => setSelectedCard(null)}
         onUpdate={handleUpdateCard}
         onDelete={handleDeleteCard}

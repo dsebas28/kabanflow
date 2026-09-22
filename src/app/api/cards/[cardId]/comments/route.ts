@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { createCommentSchema } from "@/lib/validation";
 import { emitToBoard } from "@/lib/socket";
+import { logActivity } from "@/lib/activity";
 
 type Params = { params: Promise<{ cardId: string }> };
 
@@ -12,7 +13,7 @@ export async function POST(req: Request, { params }: Params) {
   if (!session?.user?.id) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   const { cardId } = await params;
-  const card = await prisma.card.findUnique({ where: { id: cardId }, select: { list: { select: { boardId: true } } } });
+  const card = await prisma.card.findUnique({ where: { id: cardId }, select: { title: true, list: { select: { boardId: true } } } });
   if (!card) return NextResponse.json({ error: "Tarjeta no encontrada" }, { status: 404 });
 
   const access = await getBoardAccess(card.list.boardId, session.user.id);
@@ -30,5 +31,6 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   emitToBoard(card.list.boardId, "comment:created", { comment });
+  await logActivity(card.list.boardId, session.user.id, `comentó en «${card.title}»`);
   return NextResponse.json({ comment }, { status: 201 });
 }

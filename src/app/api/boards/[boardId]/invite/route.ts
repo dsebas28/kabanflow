@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getBoardAccess } from "@/lib/boardAccess";
 import { inviteMemberSchema } from "@/lib/validation";
 import { emitToBoard } from "@/lib/socket";
+import { logActivity } from "@/lib/activity";
 
 type Params = { params: Promise<{ boardId: string }> };
 
@@ -37,5 +38,6 @@ export async function POST(req: Request, { params }: Params) {
   });
 
   emitToBoard(boardId, "member:added", { member });
+  await logActivity(boardId, session.user.id, `invitó a ${member.user.name} al tablero`);
   return NextResponse.json({ member }, { status: 201 });
 }
