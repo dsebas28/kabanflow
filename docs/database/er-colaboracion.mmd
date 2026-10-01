@@ -1,0 +1,41 @@
+erDiagram
+    User {
+        text id PK
+        text name
+        text email
+        text passwordHash
+        text avatarColor
+    }
+    Board {
+        text id PK
+        text ownerId FK
+        text title
+        text description
+        text color
+    }
+    BoardMember {
+        text id PK
+        text boardId FK
+        text userId FK
+        BoardRole role
+        timestamp joinedAt
+    }
+    Message {
+        text id PK
+        text boardId FK
+        text authorId FK
+        text body
+    }
+    Activity {
+        text id PK
+        text boardId FK
+        text actorId FK
+        text text
+    }
+    User ||--o{ Board : "ownerId"
+    Board ||--o{ BoardMember : "boardId"
+    User ||--o{ BoardMember : "userId"
+    Board ||--o{ Message : "boardId"
+    User ||--o{ Message : "authorId"
+    Board ||--o{ Activity : "boardId"
+    User ||--o{ Activity : "actorId"

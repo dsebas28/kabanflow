@@ -1,0 +1,53 @@
+erDiagram
+    Board {
+        text id PK
+        text ownerId FK
+        text title
+        text description
+        text color
+    }
+    List {
+        text id PK
+        text boardId FK
+        text title
+        integer position
+    }
+    Card {
+        text id PK
+        text listId FK
+        text creatorId FK
+        text title
+        text description
+        integer position
+        timestamp dueDate
+    }
+    Comment {
+        text id PK
+        text cardId FK
+        text authorId FK
+        text body
+    }
+    Attachment {
+        text id PK
+        text cardId FK
+        text uploaderId FK
+        text name
+        text mimeType
+        integer size
+        text storedName
+    }
+    User {
+        text id PK
+        text name
+        text email
+        text passwordHash
+        text avatarColor
+    }
+    User ||--o{ Board : "ownerId"
+    Board ||--o{ List : "boardId"
+    List ||--o{ Card : "listId"
+    User ||--o{ Card : "creatorId"
+    Card ||--o{ Comment : "cardId"
+    User ||--o{ Comment : "authorId"
+    Card ||--o{ Attachment : "cardId"
+    User ||--o{ Attachment : "uploaderId"

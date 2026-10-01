@@ -2,7 +2,16 @@
 
 Tableros Kanban colaborativos con actualizaciones en tiempo real: arrastra y suelta tarjetas entre listas y todos los que tengan el tablero abierto lo ven al instante, sin recargar la página.
 
-Cuenta de prueba: `demo@kanbanflow.app` / `demo1234` (o el botón "Probar como invitado" en la página principal)
+Cuenta de prueba: `demo@kanbanflow.app` / `demo1234` (o el botón "Probar con la cuenta demo" en la página principal). La demo trae 3 tableros con tarjetas, fechas límite, comentarios, chat e historial; las otras cuentas (`ana@`, `carlos@` y `lucia@kanbanflow.app`) usan la misma contraseña, para probar el tiempo real con dos navegadores.
+
+![Tablero de KanbanFlow](docs/screenshots/05-tablero.png)
+
+## Documentación
+
+| Documento | Contenido |
+|---|---|
+| [**Guía del código**](docs/GUIA-DEL-CODIGO.md) | Cómo está construido: servidor con Socket.io, autenticación, control de acceso, drag & drop en tiempo real y subida segura de archivos, con fragmentos del código explicados |
+| [**Base de datos (PostgreSQL)**](docs/BASE-DE-DATOS.md) | Modelo de datos, diagramas entidad-relación, decisiones de diseño y 10 consultas con su resultado real |
 
 ## Por qué existe este proyecto
 
@@ -17,6 +26,32 @@ Es un proyecto de portafolio construido para demostrar un stack distinto al de m
 - **Comentarios** por tarjeta, fecha límite, y descripción.
 - **Cuentas reales**: registro con contraseña cifrada (bcrypt) o la cuenta demo para probar sin registrarse.
 - **Modo oscuro** con persistencia en `localStorage` y sin parpadeo al cargar.
+
+## Capturas
+
+| | |
+|---|---|
+| ![Inicio](docs/screenshots/01-inicio.png) | ![Inicio de sesión](docs/screenshots/02-login.png) |
+| **Página de inicio** con un tablero de demostración en vivo | **Inicio de sesión** con acceso directo a la cuenta demo |
+| ![Tableros](docs/screenshots/04-tableros.png) | ![Detalle de tarjeta](docs/screenshots/06-detalle-tarjeta.png) |
+| **Mis tableros** con progreso y miembros | **Detalle de tarjeta**: descripción, fecha límite, archivos y comentarios |
+| ![Chat](docs/screenshots/07-chat.png) | ![Actividad](docs/screenshots/08-actividad.png) |
+| **Chat del tablero** en tiempo real | **Historial de actividad** de todo el equipo |
+| ![Búsqueda rápida](docs/screenshots/09-busqueda-rapida.png) | ![Modo oscuro](docs/screenshots/10-modo-oscuro.png) |
+| **Paleta de comandos** con `Ctrl + K` | **Modo oscuro** |
+| ![Registro](docs/screenshots/03-registro.png) | |
+| **Registro** con validación en línea | |
+
+## Base de datos
+
+PostgreSQL con Prisma: 9 tablas, claves foráneas con borrado en cascada desde el tablero, índice único para que nadie esté dos veces en un tablero e índices compuestos para el chat y el historial. Detalle completo en [docs/BASE-DE-DATOS.md](docs/BASE-DE-DATOS.md).
+
+| | |
+|---|---|
+| ![Modelo de tableros](docs/database/images/er-trabajo.png) | ![Resumen de tableros](docs/database/images/01-resumen-de-tableros.png) |
+| **Modelo entidad-relación** de tableros, listas y tarjetas | **Progreso de cada tablero** calculado en SQL |
+| ![Restricción única](docs/database/images/08-restriccion-unica.png) | ![Claves foráneas](docs/database/images/07-claves-foraneas.png) |
+| PostgreSQL rechaza una **invitación duplicada** | **Claves foráneas** con `CASCADE` y `RESTRICT` |
 
 ## Stack técnico
 
